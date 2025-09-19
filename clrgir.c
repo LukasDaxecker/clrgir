@@ -88,7 +88,7 @@ int Remove(const char* path, const int max_time, const int ignoreChanges)
                             snprintf(cmd, sizeof(cmd), "rm -rf '%s'", dir->d_name);
                             system(cmd);
                             delCount++;
-                        } else {
+                        } else if(days >= max_time && dirty){
                             printf("Not Removing directory: %s (uncommitted changes)\n", dir->d_name);
                         }
                     }
