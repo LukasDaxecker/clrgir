@@ -30,6 +30,7 @@ int main(int argc, char** argv)
     int I_flag = 0, R_flag = 0, T_flag = 0, P_flag = 0, i = 1;
     int P_index = 0, T_index = 0;
     int time = MAX_TIME;
+    int wrongParam = 0;
     char* path = ".";
 
     while((opt = getopt(argc, argv, "IRTP")) != -1) 
@@ -42,23 +43,43 @@ int main(int argc, char** argv)
                 R_flag = 1;
                 break;
             case 'T':
+                // check if its the last argument
+                if(i + 1 == argc) {
+                    wrongParam = 1;
+                    break;
+                }
                 T_flag = 1;
                 T_index = i;
                 break;
             case 'P':
+                // check if its the last argument
+                if(i + 1 == argc) {
+                    wrongParam = 1;
+                    break;
+                }
                 P_flag = 1;
                 P_index = i;
                 break;
+            default:
+                if(i != P_index + 1 && i != T_index + 1) wrongParam = 1;
+                break;
         }
         i++;
+    }
+
+    if(wrongParam) {
+        PrintHelp();
+        return 0;
     }
     
     if(T_flag) time = atoi(argv[T_index + 1]);
     if(P_flag) path = argv[P_index + 1];
     if(R_flag)
-        Remove(path, time, I_flag);
-    else
         RemoveRecursiv(path, time, I_flag);
+    else
+        Remove(path, time, I_flag);
+
+    return 0;
 }
 
 void PrintHelp()
