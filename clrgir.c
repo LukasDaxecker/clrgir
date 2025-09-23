@@ -16,24 +16,54 @@ int UncomittedChanges(const char* repo_dir);
 
 int main(int argc, char** argv)
 {
+    // Standard Function if no options are provided
     if(argc == 1)
+    {
         Remove(".", MAX_TIME, 0);
-    else if(argc == 1 && strcmp(argv[1], "-I") == 0)
-        RemoveRecursiv(".", MAX_TIME, 1);
-    else if(argc == 1 && strcmp(argv[1], "-R") == 0)
-        RemoveRecursiv(".", MAX_TIME, 0);
-    else if(strcmp(argv[1], "-H") == 0 || strcmp(argv[1], "--help") == 0) 
+        return 0;
+    } else if(strcmp(argv[1], "-H") == 0 || strcmp(argv[1], "--Help") == 0 || strcmp(argv[1], "?") == 0) {
         PrintHelp();
-    else if(strcmp(argv[1], "-P") == 0 && argc == 3) 
-        Remove(argv[2], MAX_TIME, 0);
-    else if(strcmp(argv[1], "-P") == 0 && argc == 4) 
-        RemoveRecursiv(argv[2], MAX_TIME, 0);
+        return 0;
+    }
+
+    int opt;
+    int I_flag = 0, R_flag = 0, T_flag = 0, P_flag = 0, i = 1;
+    int P_index = 0, T_index = 0;
+    int time = MAX_TIME;
+    char* path = ".";
+
+    while((opt = getopt(argc, argv, "IRTP")) != -1) 
+    {
+        switch (opt) {
+            case 'I':
+                I_flag = 1;
+                break;
+            case 'R':
+                R_flag = 1;
+                break;
+            case 'T':
+                T_flag = 1;
+                T_index = i;
+                break;
+            case 'P':
+                P_flag = 1;
+                P_index = i;
+                break;
+        }
+        i++;
+    }
+    
+    if(T_flag) time = atoi(argv[T_index + 1]);
+    if(P_flag) path = argv[P_index + 1];
+    if(R_flag)
+        Remove(path, time, I_flag);
+    else
+        RemoveRecursiv(path, time, I_flag);
 }
 
 void PrintHelp()
 {
     printf("clrdir [-R] [-I] [-T <TIME>] [-P <PATH>]\n\n");
-    printf("Clears all Gitrepos which havent been used in some time\n\n");
     printf("Options:\n");
     printf("    * -R ... Recursive\n");
     printf("    * -I ... Ignores uncommitted changes\n");
@@ -106,6 +136,7 @@ int Remove(const char* path, const int max_time, const int ignoreChanges)
 int RemoveRecursiv(const char* path, const int max_time, const int ignoreChanges)
 {
 
+    return 0;
 }
 
 int UncomittedChanges(const char* repo_dir)
