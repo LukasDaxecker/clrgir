@@ -76,8 +76,7 @@ int main(int argc, char** argv)
     if(T_flag) time = atoi(argv[T_index + 1]);
     if(P_flag) path = argv[P_index + 1];
     if(R_flag)
-        if(RemoveRecursiv(path, 0, time, I_flag) == 0)
-            printf("No Repos found/deleted\n");
+        printf("Deleted %d Repos\n", RemoveRecursiv(path, 0, time, I_flag));
     else
         Remove(path, time, I_flag);
 
