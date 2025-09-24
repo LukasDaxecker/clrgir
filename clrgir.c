@@ -8,10 +8,11 @@
 
 #define MAX_LINE 100
 #define MAX_TIME 20 
+#define MAX_DEPTH 4
 
 void PrintHelp();
 int Remove(const char* path, const int max_time, const int ignoreChanges);
-int RemoveRecursiv(const char* path, const int max_time, const int ignoreChanges);
+int RemoveRecursiv(const char* path, int depth, const int max_time, const int ignoreChanges);
 int UncomittedChanges(const char* repo_dir);
 
 int main(int argc, char** argv)
@@ -75,7 +76,7 @@ int main(int argc, char** argv)
     if(T_flag) time = atoi(argv[T_index + 1]);
     if(P_flag) path = argv[P_index + 1];
     if(R_flag)
-        RemoveRecursiv(path, time, I_flag);
+        printf("Deleted %d Repos\n", RemoveRecursiv(path, 0, time, I_flag));
     else
         Remove(path, time, I_flag);
 
@@ -154,10 +155,63 @@ int Remove(const char* path, const int max_time, const int ignoreChanges)
     return 0;
 }
 
-int RemoveRecursiv(const char* path, const int max_time, const int ignoreChanges)
+int RemoveRecursiv(const char* path, int depth, const int max_time, const int ignoreChanges)
 {
+    if (depth > MAX_DEPTH) return 0;
+    if (chdir(path) != 0) {
+        printf("Directory not found: %s\n", path);
+        return 0;
+    }
 
-    return 0;
+    DIR *d = opendir(".");
+    if (!d) {
+        perror("opendir failed");
+        return 0;
+    }
+
+    int delCount = 0;
+    struct dirent *dir;
+    struct stat st;
+    time_t now = time(NULL);
+
+    while ((dir = readdir(d)) != NULL) {
+        if (strcmp(dir->d_name, ".") == 0 || strcmp(dir->d_name, "..") == 0)
+            continue;
+
+        if (stat(dir->d_name, &st) == 0 && S_ISDIR(st.st_mode)) {
+            // Check if it's a git repo
+            char git_path[512];
+            snprintf(git_path, sizeof(git_path), "%s/.git", dir->d_name);
+
+            struct stat git_st;
+            if (stat(git_path, &git_st) == 0 && S_ISDIR(git_st.st_mode)) {
+                double seconds = difftime(now, git_st.st_mtime);
+                int days = (int)(seconds / (60 * 60 * 24));
+
+                int dirty = UncomittedChanges(dir->d_name);
+
+                if ((days >= max_time && !dirty) || (days >= max_time && ignoreChanges)) {
+                    printf("Removing directory: %s (last git change: %d days ago)\n", dir->d_name, days);
+                    char cmd[512];
+                    snprintf(cmd, sizeof(cmd), "rm -rf '%s'", dir->d_name);
+                    system(cmd);
+                    delCount++;
+                } else if(days >= max_time && dirty){
+                    printf("Not Removing directory: %s (uncommitted changes)\n", dir->d_name);
+                }
+            } else {
+                printf("Directory: %s not a git repo. Moving to next!\n", dir->d_name);
+                // Recurse into subdirectory if not a git repo
+                char subdir[512];
+                snprintf(subdir, sizeof(subdir), "%s", dir->d_name);
+                delCount += RemoveRecursiv(subdir, depth + 1, max_time, ignoreChanges);
+            }
+        }
+    }
+
+    closedir(d);
+    chdir(".."); // go back to parent directory
+    return delCount;
 }
 
 int UncomittedChanges(const char* repo_dir)
