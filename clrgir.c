@@ -22,7 +22,7 @@ int main(int argc, char** argv)
     {
         Remove(".", MAX_TIME, 0);
         return 0;
-    } else if(strcmp(argv[1], "-H") == 0 || strcmp(argv[1], "--Help") == 0 || strcmp(argv[1], "?") == 0) {
+    } else if(strcmp(argv[1], "-H") == 0 || strcmp(argv[1], "--Help") == 0 || strcmp(argv[1], "--help") == 0 || strcmp(argv[1], "?") == 0) {
         PrintHelp();
         return 0;
     }
